@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+chromadb
+google-generativeai
+pypdf
+python-pptx
+python-multipart
+python-dotenv
+pandas
+numpy
+joblib
+sqlalchemy
+mysql-connector-python
+
+ 

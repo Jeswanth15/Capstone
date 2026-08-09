@@ -1,0 +1,289 @@
+/* ================================
+   GLOBAL PAGE FEEL (for this file)
+   ================================ */
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* The main right side where timetable lives */
+div[style*="marginLeft: \"250px\""] {
+  background: radial-gradient(circle at top left, #f3f7ff 0, #eef5ff 30%, #f8fafc 100%);
+  min-height: 100vh;
+}
+
+/* Title */
+h2 {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Wrapper padding already inline, we just enhance the content area */
+div[style*="padding: \"20px\""] {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ================================
+   DROPDOWN (CLASS SELECTOR)
+   ================================ */
+
+div[style*="marginBottom: \"20px\""] > select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d0dcf0;
+  background: #f9fbff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+}
+
+div[style*="marginBottom: \"20px\""] > select:hover {
+  border-color: #4785ff;
+  background: #f4f7ff;
+}
+
+div[style*="marginBottom: \"20px\""] > select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+}
+
+/* ================================
+   TIMETABLE TABLE
+   ================================ */
+
+table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+/* Header Row */
+thead tr {
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+}
+
+thead th {
+  padding: 14px 10px;
+  color: #f9fafb;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+thead th:first-child {
+  background: rgba(15, 23, 42, 0.18);
+}
+
+/* Period column (first column in body) */
+tbody td:first-child {
+  font-weight: 700;
+  color: #0f172a;
+  background: linear-gradient(180deg, #e0ecff, #e5f0ff);
+  width: 72px;
+}
+
+/* Table cells */
+tbody td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #eef2ff;
+  border-right: 1px dashed #e2e8f0;
+  vertical-align: top;
+  background: radial-gradient(circle at top, #f9fbff 0, #f4f7ff 40%, #f9fafb 100%);
+}
+
+/* Row hover */
+tbody tr:hover td {
+  background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+}
+
+/* Last row border cleanup */
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ================================
+   INNER CELL LAYOUT
+   ================================ */
+
+tbody td > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+  justify-content: center;
+}
+
+/* ================================
+   SELECTS INSIDE CELLS (Subject / Teacher)
+   ================================ */
+
+tbody td select {
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: 8px;
+  border: 1px solid #d4def4;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  outline: none;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #64748b 50%),
+    linear-gradient(135deg, #64748b 50%, transparent 50%);
+  background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+tbody td select:hover {
+  border-color: #60a5fa;
+  background-color: #f8fbff;
+}
+
+tbody td select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
+}
+
+/* Differentiate subject vs teacher visually */
+tbody td select:first-of-type {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+tbody td select:last-of-type {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: #1f2937;
+  background: #f1f5f9;
+}
+
+/* ================================
+   DELETE BUTTON INSIDE CELL
+   ================================ */
+
+tbody td button {
+  align-self: flex-end;
+  margin-top: 2px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #fef2f2;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 10px 20px rgba(248, 113, 113, 0.35);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+}
+
+tbody td button:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 14px 32px rgba(185, 28, 28, 0.45);
+  opacity: 0.96;
+}
+
+tbody td button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 6px 14px rgba(127, 29, 29, 0.45);
+}
+
+/* ================================
+   SAVE BUTTON AT BOTTOM
+   ================================ */
+
+button[style*="Save Timetable"] {
+  margin-top: 24px !important;
+  padding: 11px 24px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: radial-gradient(circle at top left, #22c55e, #16a34a, #15803d);
+  color: #ecfdf3;
+  cursor: pointer;
+  box-shadow: 0 20px 40px rgba(22, 163, 74, 0.5);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+button[style*="Save Timetable"]::before {
+  content: "💾";
+  font-size: 15px;
+}
+
+button[style*="Save Timetable"]:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 26px 55px rgba(21, 128, 61, 0.6);
+  filter: brightness(1.03);
+}
+
+button[style*="Save Timetable"]:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 14px 28px rgba(21, 128, 61, 0.75);
+}
+
+/* ================================
+   RESPONSIVE (MOBILE / TABLET)
+   ================================ */
+
+@media (max-width: 900px) {
+  div[style*="marginLeft: \"250px\""] {
+    margin-left: 0 !important;
+  }
+
+  div[style*=\"padding: \\\"20px\\\"\"] {
+    padding: 16px !important;
+  }
+
+  table {
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  thead th {
+    padding: 10px 6px;
+    font-size: 11px;
+  }
+
+  tbody td {
+    padding: 8px 4px;
+  }
+
+  tbody td select {
+    font-size: 11px;
+    padding: 6px 6px;
+  }
+
+  button[style*="Save Timetable"] {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Very small devices */
+@media (max-width: 600px) {
+  thead th:nth-child(n + 5),
+  tbody td:nth-child(n + 5) {
+    display: none; /* hide last columns to avoid squeeze; still accessible via horizontal scroll container */
+  }
+}
