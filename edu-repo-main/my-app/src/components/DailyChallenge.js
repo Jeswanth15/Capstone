@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { getUserIdFromToken } from '../utils/authHelper';
 import GamificationService from '../services/GamificationService';
 import { triggerRewardAnimation } from './CoinParticleFX';
+import AIQuestionProcessingScreen from './AIQuestionProcessingScreen';
 
 const DailyChallenge = () => {
     const navigate = useNavigate();
@@ -151,7 +152,7 @@ const DailyChallenge = () => {
             }
             
             setQuestions(generated);
-            setStep(2);
+            // AIQuestionProcessingScreen handles step transition via onReady callback when questions are populated!
         } catch (err) {
             console.error("Quiz generation failed:", err);
             setErrorMsg(err.message || "Failed to generate questions. Please try again.");
@@ -295,12 +296,10 @@ const DailyChallenge = () => {
                 </div>
             )}
 
-            {/* Step 1: Loading Quiz */}
+            {/* Step 1: Loading Quiz — 5-Stage AI Processing Screen */}
             {step === 1 && (
-                <div style={{ padding: 80, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-                    <div style={{ width: 64, height: 64, border: "6px solid #f1f5f9", borderTop: "6px solid #f59e0b", borderRadius: "50%", animation: "spin 1.2s linear infinite" }} />
-                    <h3 style={{ fontSize: 20, fontWeight: 800, color: "#1e293b", margin: 0 }}>Synthesizing Custom Quest...</h3>
-                    <p style={{ color: "#64748b", fontSize: 14, maxWidth: 400, margin: 0, lineHeight: 1.6 }}>AI is referencing ingested materials and curriculum logs to craft a targeted practice set for {weakSubject?.subject}.</p>
+                <div style={{ padding: "40px 0" }}>
+                    <AIQuestionProcessingScreen isComplete={questions.length > 0} onReady={() => setStep(2)} />
                 </div>
             )}
 

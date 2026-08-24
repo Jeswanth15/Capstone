@@ -32,10 +32,10 @@ const ROLE_CONFIGS = {
         ],
       },
       {
-        label: "Transport", icon: "🚌", links: [
-          { to: "/schooladmin/transport", label: "Transport Mgmt", icon: "M8 6v6M15 6v6M2 12h19.6M18 18H2M5 18H2v-6l2-5h13l2 5v3M16.8 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
-          { to: "/schooladmin/student-transport", label: "Student Transport", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87" },
-        ],
+        // label: "Transport", icon: "🚌", links: [
+        //   { to: "/schooladmin/transport", label: "Transport Mgmt", icon: "M8 6v6M15 6v6M2 12h19.6M18 18H2M5 18H2v-6l2-5h13l2 5v3M16.8 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
+        //   { to: "/schooladmin/student-transport", label: "Student Transport", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87" },
+        // ],
       },
     ],
   },
@@ -69,7 +69,7 @@ const ROLE_CONFIGS = {
           { to: "/student/syllabus", label: "View Syllabus", icon: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20" },
           { to: "/student/practice", label: "Practice Zone", icon: "M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3M6.343 6.343l-.707-.707M17.657 6.343l.707-.707M6.343 17.657l-.707.707M17.657 17.657l.707.707M12 5a7 7 0 0 1 0 14 7 7 0 0 1 0-14z" },
           { to: "/student/daily-challenge", label: "Daily Challenge", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
-          { to: "/student/bus-tracking", label: "Bus Tracking", icon: "M8 6v6M15 6v6M2 12h19.6M18 18H2M16.8 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
+         // { to: "/student/bus-tracking", label: "Bus Tracking", icon: "M8 6v6M15 6v6M2 12h19.6M18 18H2M16.8 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
           { to: "/student/missions", label: "Missions & Goals", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
           { to: "/student/leaderboard", label: "Leaderboard", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
           { to: "/student/gamification", label: "Rewards & Level", icon: "M12 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1 1 18 0 9 9 0 0 1-18 0z" },

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getDecodedToken, getUserIdFromToken } from "../utils/authHelper";
-import { getAllAnnouncements, getAllClassSubjects, getTimetableByClass, getClassroomById, getCalendarBySchool } from "../utils/api";
+import { getAllAnnouncements, getAllClassSubjects, getTimetableByClass, getClassroomById } from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import LiveBusMap from "./LiveBusMap";
 import PerformanceOverview from "./PerformanceOverview";
@@ -8,6 +8,8 @@ import { getPerformancePrediction } from "../utils/api";
 import AvatarService from "../services/AvatarService";
 import GamificationService from "../services/GamificationService";
 import AvatarDisplay from "./AvatarDisplay";
+import GamificationWidget from "./GamificationWidget";
+import StreakWidget, { HeaderStreakBadge } from "./StreakWidget";
 
 const StudentPage = () => {
   const decoded = getDecodedToken();
@@ -107,9 +109,7 @@ const StudentPage = () => {
                   <span style={{ fontSize:12, fontWeight:700, color:"#fed7aa" }}>
                     🪙 {gamStatus.coins} Coins
                   </span>
-                  <span style={{ fontSize:12, fontWeight:800, background:"rgba(249,115,22,0.3)", padding:"3px 10px", borderRadius:99, color:"#ffedd5", border:"1px solid rgba(249,115,22,0.5)", display:"flex", alignItems:"center", gap:4 }}>
-                    🔥 {gamStatus.currentStreak || 1}-Day Streak
-                  </span>
+                  <HeaderStreakBadge streakCount={gamStatus?.currentStreak || 3} />
                   <span style={{ fontSize:11, opacity:0.8 }}>
                     🎨 {avatarData?.selectedStyle || 'adventurer'}
                   </span>
@@ -213,10 +213,12 @@ const StudentPage = () => {
       )}
 
       <div className="responsive-grid-main">
-        
-        {/* Main */}
+        {/* Main Column */}
         <div style={{ display:"flex", flexDirection:"column", gap:28 }}>
-           
+           {/* Gamification & Streak Systems */}
+           <GamificationWidget status={gamStatus} />
+           <StreakWidget streakCount={gamStatus?.currentStreak || 12} />
+
            <PerformanceOverview data={performanceData} />
 
            <div style={{ background:"var(--surface-1)", borderRadius:20, border:"1px solid var(--border-light)", boxShadow:"var(--shadow-sm)", overflow:"hidden" }}>

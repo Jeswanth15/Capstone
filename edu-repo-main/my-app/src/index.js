@@ -14,7 +14,7 @@ root.render(
   </React.StrictMode>
 );
 
-// Register PWA Service Worker
-serviceWorkerRegistration.register();
+// Unregister old PWA Service Worker to ensure fresh builds load immediately
+serviceWorkerRegistration.unregister();
 
 reportWebVitals();
