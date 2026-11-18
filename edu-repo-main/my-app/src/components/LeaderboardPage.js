@@ -17,6 +17,7 @@ import {
   getStudentProfilePreview, triggerWeeklyRewards
 } from '../services/leaderboardService';
 import gamificationService from '../services/GamificationService';
+import TeamChallengeService from '../services/TeamChallengeService';
 import AvatarDisplay from './AvatarDisplay';
 
 const getBadgeForLevel = (level) => {
@@ -121,6 +122,19 @@ const LeaderboardPage = () => {
       let data = [];
       if (scopeTab === 'school') {
         data = await getSchoolLeaderboard(timeFilter, currentUserId);
+      } else if (scopeTab === 'team') {
+        const res = await TeamChallengeService.getTeamLeaderboard();
+        data = (res.data || []).map(t => ({
+          userId: t.id,
+          name: t.name,
+          nickname: "Territory Competitor",
+          className: t.secondaryInfo || "Team Squad",
+          level: t.level || 1,
+          xp: t.xp || 0,
+          coins: t.score || 0,
+          rank: t.rank,
+          isCurrentUser: false
+        }));
       } else {
         data = await getClassLeaderboard(timeFilter, currentUserId);
       }
@@ -369,6 +383,13 @@ const LeaderboardPage = () => {
                 icon={<ClassIcon fontSize="small" />}
                 iconPosition="start"
                 label="📚 My Class"
+                sx={{ fontWeight: 800, textTransform: 'none', fontSize: 13.5, minHeight: 44, borderRadius: 3 }}
+              />
+              <Tab
+                value="team"
+                icon={<EmojiEventsIcon fontSize="small" />}
+                iconPosition="start"
+                label="🏰 Team Territory"
                 sx={{ fontWeight: 800, textTransform: 'none', fontSize: 13.5, minHeight: 44, borderRadius: 3 }}
               />
             </Tabs>

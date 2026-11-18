@@ -1,217 +1,192 @@
 package edu.example.edu.Service;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import edu.example.edu.DTO.BadgeDTO;
+import edu.example.edu.DTO.UserGamificationProfileDTO;
+import edu.example.edu.Entity.*;
+import edu.example.edu.Repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import edu.example.edu.DTO.GamificationStatusDTO;
-import edu.example.edu.Entity.CoinHistory;
-import edu.example.edu.Entity.User;
-import edu.example.edu.Entity.XPHistory;
-import edu.example.edu.Repository.CoinHistoryRepository;
-import edu.example.edu.Repository.UserRepository;
-import edu.example.edu.Repository.XPHistoryRepository;
-import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class GamificationService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final XPHistoryRepository xpHistoryRepository;
+    private final UserBadgeRepository userBadgeRepository;
+    private final TeamStudentParticipationRepository participationRepository;
 
-    @Autowired
-    private XPHistoryRepository xpHistoryRepository;
-
-    @Autowired
-    private CoinHistoryRepository coinHistoryRepository;
-
-    @Autowired
-    private AvatarService avatarService;
-
-    private static final int[] LEVEL_THRESHOLDS = { 0, 250, 600, 1200, 2000, 3500, 5000 };
-    private static final String[] LEVEL_NAMES = { "Beginner", "Learner", "Explorer", "Scholar", "Expert", "Master", "Grandmaster" };
-
-    @Transactional
-    public GamificationStatusDTO getGamificationStatus(Long userId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found");
-        }
-        User user = userOpt.get();
-
-        java.time.LocalDate today = java.time.LocalDate.now();
-        java.time.LocalDate lastLogin = user.getLastLoginDate();
-
-        boolean isFirstLoginToday = false;
-        int dailyXp = 0;
-        int dailyCoins = 0;
-
-        if (lastLogin == null) {
-            user.setCurrentStreak(1);
-            user.setLastLoginDate(today);
-            isFirstLoginToday = true;
-            dailyXp = 50;
-            dailyCoins = 25;
-        } else if (lastLogin.equals(today.minusDays(1))) {
-            int newStreak = (user.getCurrentStreak() != null ? user.getCurrentStreak() : 0) + 1;
-            user.setCurrentStreak(newStreak);
-            user.setLastLoginDate(today);
-            isFirstLoginToday = true;
-            dailyXp = 50 + Math.min(newStreak * 5, 50);
-            dailyCoins = 25 + Math.min(newStreak * 2, 25);
-        } else if (lastLogin.isBefore(today.minusDays(1))) {
-            user.setCurrentStreak(1);
-            user.setLastLoginDate(today);
-            isFirstLoginToday = true;
-            dailyXp = 50;
-            dailyCoins = 25;
-        } else {
-            isFirstLoginToday = false;
-        }
-
-        if (isFirstLoginToday) {
-            user.setTotalXp((user.getTotalXp() != null ? user.getTotalXp() : 0) + dailyXp);
-            user.setCurrentLevel(calculateLevel(user.getTotalXp()));
-            user.setCoins((user.getCoins() != null ? user.getCoins() : 0) + dailyCoins);
-            userRepository.save(user);
-
-            XPHistory xpHistory = new XPHistory();
-            xpHistory.setUser(user);
-            xpHistory.setActivity("Daily Login Streak (" + user.getCurrentStreak() + " Days)");
-            xpHistory.setXpEarned(dailyXp);
-            xpHistory.setCreatedAt(LocalDateTime.now());
-            xpHistoryRepository.save(xpHistory);
-
-            CoinHistory coinHistory = new CoinHistory();
-            coinHistory.setUser(user);
-            coinHistory.setActivity("Daily Login Streak (" + user.getCurrentStreak() + " Days)");
-            coinHistory.setCoinsEarned(dailyCoins);
-            coinHistory.setCreatedAt(LocalDateTime.now());
-            coinHistoryRepository.save(coinHistory);
-        }
-
-        GamificationStatusDTO dto = new GamificationStatusDTO();
-        dto.setTotalXp(user.getTotalXp() != null ? user.getTotalXp() : 0);
-        dto.setCurrentLevel(user.getCurrentLevel() != null ? user.getCurrentLevel() : 1);
-        dto.setCoins(user.getCoins() != null ? user.getCoins() : 0);
-        dto.setLevelName(getLevelName(dto.getCurrentLevel()));
-        dto.setNextLevelXpThreshold(getNextLevelThreshold(dto.getCurrentLevel()));
-        dto.setCurrentStreak(user.getCurrentStreak() != null ? user.getCurrentStreak() : 1);
-        dto.setIsFirstLoginToday(isFirstLoginToday);
-        dto.setDailyXpEarned(dailyXp);
-        dto.setDailyCoinsEarned(dailyCoins);
-        return dto;
+    public GamificationService(
+            UserRepository userRepository,
+            XPHistoryRepository xpHistoryRepository,
+            UserBadgeRepository userBadgeRepository,
+            TeamStudentParticipationRepository participationRepository
+    ) {
+        this.userRepository = userRepository;
+        this.xpHistoryRepository = xpHistoryRepository;
+        this.userBadgeRepository = userBadgeRepository;
+        this.participationRepository = participationRepository;
     }
 
-    private String getLevelName(int level) {
-        if (level < 1) return LEVEL_NAMES[0];
-        if (level > 7) return LEVEL_NAMES[6];
-        return LEVEL_NAMES[level - 1];
-    }
+    public static final int BASE_PARTICIPATION_XP = 20;
+    public static final int WINNING_TEAM_BONUS_XP = 30;
 
-    private int getNextLevelThreshold(int currentLevel) {
-        if (currentLevel >= 7) return LEVEL_THRESHOLDS[6];
-        return LEVEL_THRESHOLDS[currentLevel];
-    }
-
-    private int calculateLevel(int totalXp) {
-        for (int i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-            if (totalXp >= LEVEL_THRESHOLDS[i]) {
-                return i + 1;
-            }
+    public int calculateXpForChallenge(int score, boolean isWinner) {
+        int performanceXp = score; // 1 XP per percentage point
+        int total = BASE_PARTICIPATION_XP + performanceXp;
+        if (isWinner) {
+            total += WINNING_TEAM_BONUS_XP;
         }
-        return 1;
+        return total;
     }
 
     @Transactional
-    public boolean awardXP(Long userId, String activity) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) return false;
-        User user = userOpt.get();
+    public List<BadgeDTO> awardXpAndEvaluateBadges(User student, TeamChallengeResult result, boolean isWinner) {
+        Long studentId = student.getUserId();
+        String activityTag = "CHALLENGE_SESSION_" + result.getSession().getId();
 
-        // Prevent duplicate XP rewards for the same specific activity instance
-        // Assuming activity string includes unique identifier if needed (e.g. "LessonCompleted_123")
-        if (xpHistoryRepository.existsByUser_UserIdAndActivity(userId, activity)) {
-            return false;
+        // Idempotency check: Ensure XP for this session isn't awarded twice to the student
+        boolean alreadyAwarded = xpHistoryRepository.existsByUser_UserIdAndActivity(studentId, activityTag);
+
+        int xpToEarn = calculateXpForChallenge(result.getScore(), isWinner);
+
+        if (!alreadyAwarded) {
+            XPHistory xp = new XPHistory();
+            xp.setUser(student);
+            xp.setActivity(activityTag);
+            xp.setXpEarned(xpToEarn);
+            xp.setCreatedAt(LocalDateTime.now());
+            xpHistoryRepository.save(xp);
+
+            int newTotalXp = (student.getTotalXp() != null ? student.getTotalXp() : 0) + xpToEarn;
+            student.setTotalXp(newTotalXp);
+            
+            int newLevel = (newTotalXp / 100) + 1;
+            student.setCurrentLevel(newLevel);
+            userRepository.save(student);
         }
 
-        int xpToAward = 0;
-        int coinsToAward = 0;
+        // Evaluate and award badges idempotently
+        List<UserBadge> newBadges = new ArrayList<>();
+        List<TeamStudentParticipation> participations = participationRepository.findByStudent_UserId(studentId);
+        int completedCount = participations.size();
 
-        if (activity.startsWith("Lesson Completed")) {
-            xpToAward = 20;
-            coinsToAward = 5;
-        } else if (activity.startsWith("Daily Challenge")) {
-            // Daily Challenge is the primary AI quiz — grant highest reward
-            xpToAward = 100;
-            coinsToAward = 30;
-        } else if (activity.startsWith("Quiz Completed")) {
-            // AI Practice test (ad-hoc)
-            xpToAward = 50;
-            coinsToAward = 15;
-        } else if (activity.startsWith("Mock Test Completed")) {
-            xpToAward = 100;
-            coinsToAward = 30;
-        } else if (activity.startsWith("Daily Login")) {
-            xpToAward = 10;
-            coinsToAward = 5;
-        } else if (activity.startsWith("Daily Champion")) {
-            // Bonus for completing all daily missions
-            xpToAward = 100;
-            coinsToAward = 50;
-        } else if (activity.startsWith("Weekly Warrior")) {
-            // Bonus for completing all weekly challenges
-            xpToAward = 500;
-            coinsToAward = 250;
-        } else {
-            return false;
+        // 1. FIRST_CHALLENGE
+        if (completedCount >= 1) {
+            awardBadgeIfAbsent(student, "FIRST_CHALLENGE", "First Victory", "Completed your 1st team challenge!", "🏆", "Complete 1 team challenge", newBadges);
         }
 
-        int currentTotal = user.getTotalXp() != null ? user.getTotalXp() : 0;
-        int previousLevel = user.getCurrentLevel() != null ? user.getCurrentLevel() : 1;
-        user.setTotalXp(currentTotal + xpToAward);
-        user.setCurrentLevel(calculateLevel(user.getTotalXp()));
+        // 2. TEAM_PLAYER
+        if (completedCount >= 3) {
+            awardBadgeIfAbsent(student, "TEAM_PLAYER", "Team Player", "Participated in 3+ team challenges with your squad!", "🤝", "Complete 3 team challenges", newBadges);
+        }
 
-        int currentCoins = user.getCoins() != null ? user.getCoins() : 0;
-        user.setCoins(currentCoins + coinsToAward);
+        // 3. TOP_SCORER
+        if (result.getScore() >= 90) {
+            awardBadgeIfAbsent(student, "TOP_SCORER", "Top Scorer", "Achieved 90%+ in a team challenge!", "🎯", "Score 90% or higher", newBadges);
+        }
+
+        // 4. CHALLENGE_WINNER
+        if (isWinner) {
+            awardBadgeIfAbsent(student, "CHALLENGE_WINNER", "Territory Conqueror", "Member of the winning team in a challenge!", "🏰", "Win a team challenge", newBadges);
+        }
+
+        // 5. CONSISTENT_PLAYER
+        if (completedCount >= 5 || (student.getCurrentStreak() != null && student.getCurrentStreak() >= 3)) {
+            awardBadgeIfAbsent(student, "CONSISTENT_PLAYER", "Unstoppable Streak", "Completed 5+ challenges or maintained a 3-day active streak!", "🔥", "Complete 5 challenges or 3-day streak", newBadges);
+        }
+
+        // 6. MODULE_MASTER
+        if (Boolean.TRUE.equals(result.getIsModuleCaptured())) {
+            awardBadgeIfAbsent(student, "MODULE_MASTER", "Module Master", "Successfully captured control of a module territory!", "👑", "Capture a module territory", newBadges);
+        }
+
+        return newBadges.stream().map(this::toBadgeDTO).collect(Collectors.toList());
+    }
+
+    private void awardBadgeIfAbsent(User user, String code, String name, String desc, String icon, String criteria, List<UserBadge> newBadges) {
+        if (!userBadgeRepository.existsByUser_UserIdAndBadgeCode(user.getUserId(), code)) {
+            UserBadge b = new UserBadge();
+            b.setUser(user);
+            b.setBadgeCode(code);
+            b.setBadgeName(name);
+            b.setDescription(desc);
+            b.setIcon(icon);
+            b.setCriteria(criteria);
+            b.setEarnedAt(LocalDateTime.now());
+            userBadgeRepository.save(b);
+            newBadges.add(b);
+        }
+    }
+
+    public UserGamificationProfileDTO getUserProfile(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         
+        int totalXp = user.getTotalXp() != null ? user.getTotalXp() : 0;
+        int level = (totalXp / 100) + 1;
+        int xpForNext = level * 100;
+        double progress = (totalXp % 100);
+
+        List<UserBadge> badges = userBadgeRepository.findByUser_UserId(userId);
+        List<BadgeDTO> badgeDTOs = badges.stream().map(this::toBadgeDTO).collect(Collectors.toList());
+        int challengesCount = participationRepository.findByStudent_UserId(userId).size();
+
+        return new UserGamificationProfileDTO(
+                user.getUserId(),
+                user.getName(),
+                user.getEmail(),
+                totalXp,
+                level,
+                xpForNext,
+                progress,
+                user.getCoins() != null ? user.getCoins() : 0,
+                user.getCurrentStreak() != null ? user.getCurrentStreak() : 1,
+                user.getEquippedNickname(),
+                badgeDTOs,
+                challengesCount
+        );
+    }
+
+    public BadgeDTO toBadgeDTO(UserBadge b) {
+        return new BadgeDTO(
+                b.getBadgeCode(),
+                b.getBadgeName(),
+                b.getDescription(),
+                b.getIcon(),
+                b.getCriteria(),
+                b.getEarnedAt()
+        );
+    }
+
+    @Transactional
+    public boolean awardXP(Long userId, String activityTag) {
+        return awardXP(userId, 50, activityTag);
+    }
+
+    @Transactional
+    public boolean awardXP(Long userId, int xpAmount, String activityTag) {
+        if (xpHistoryRepository.existsByUser_UserIdAndActivity(userId, activityTag)) {
+            return false;
+        }
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return false;
+
+        XPHistory xp = new XPHistory();
+        xp.setUser(user);
+        xp.setActivity(activityTag);
+        xp.setXpEarned(xpAmount);
+        xp.setCreatedAt(LocalDateTime.now());
+        xpHistoryRepository.save(xp);
+
+        int newTotalXp = (user.getTotalXp() != null ? user.getTotalXp() : 0) + xpAmount;
+        user.setTotalXp(newTotalXp);
+        user.setCurrentLevel((newTotalXp / 100) + 1);
         userRepository.save(user);
 
-        // Auto-unlock avatar styles on level-up
-        if (user.getCurrentLevel() > previousLevel) {
-            try {
-                avatarService.autoUnlockOnLevelUp(userId);
-            } catch (Exception e) {
-                // Don't let avatar unlock failure break XP awarding
-                System.err.println("Avatar auto-unlock error: " + e.getMessage());
-            }
-        }
-
-        XPHistory xpHistory = new XPHistory();
-        xpHistory.setUser(user);
-        xpHistory.setActivity(activity);
-        xpHistory.setXpEarned(xpToAward);
-        xpHistory.setCreatedAt(LocalDateTime.now());
-        xpHistoryRepository.save(xpHistory);
-
-        CoinHistory coinHistory = new CoinHistory();
-        coinHistory.setUser(user);
-        coinHistory.setActivity(activity);
-        coinHistory.setCoinsEarned(coinsToAward);
-        coinHistory.setCreatedAt(LocalDateTime.now());
-        coinHistoryRepository.save(coinHistory);
-
         return true;
-    }
-
-    public List<XPHistory> getXpHistory(Long userId) {
-        return xpHistoryRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
-    }
-
-    public List<CoinHistory> getCoinHistory(Long userId) {
-        return coinHistoryRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
     }
 }

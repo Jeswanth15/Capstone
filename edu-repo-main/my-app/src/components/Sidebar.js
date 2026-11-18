@@ -31,12 +31,6 @@ const ROLE_CONFIGS = {
           { to: "/schooladmin/assignments", label: "Assignments", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" },
         ],
       },
-      {
-        // label: "Transport", icon: "🚌", links: [
-        //   { to: "/schooladmin/transport", label: "Transport Mgmt", icon: "M8 6v6M15 6v6M2 12h19.6M18 18H2M5 18H2v-6l2-5h13l2 5v3M16.8 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 22a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
-        //   { to: "/schooladmin/student-transport", label: "Student Transport", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87" },
-        // ],
-      },
     ],
   },
   TEACHER: {
@@ -51,6 +45,7 @@ const ROLE_CONFIGS = {
           { to: "/teacher/teaching-logs", label: "Teaching Logs", icon: "M9 12h6M9 16h6M9 8h6M5 3H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2" },
           { to: "/teacher/exams", label: "Exams", icon: "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M13 3h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z" },
           { to: "/teacher/marks", label: "Marks Entry", icon: "M9 12l2 2 4-4M7 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2M9 2h6v4H9z" },
+          { to: "/teacher/team-challenges", label: "Team Challenges", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
         ],
       },
     ],
@@ -61,6 +56,7 @@ const ROLE_CONFIGS = {
       {
         label: "My Learning", icon: "🎓", links: [
           { to: "/student", label: "Dashboard", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
+          { to: "/student/team-challenges", label: "Team Challenges", icon: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
           { to: "/student/timetable", label: "My Timetable", icon: "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" },
           { to: "/student/exams", label: "My Exams", icon: "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" },
           { to: "/student/marks", label: "My Marks", icon: "M9 12l2 2 4-4M7 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2" },
@@ -123,9 +119,12 @@ const Sidebar = () => {
     const fetchAvatar = async () => {
       try {
         const res = await AvatarService.getCurrent(userId);
-        setAvatarData(res.data);
+        if (res && res.data) {
+          setAvatarData(res.data);
+        }
       } catch (err) {
-        console.error("Error fetching avatar in Sidebar:", err);
+        // Fallback gracefully without console spam
+        setAvatarData(null);
       }
     };
     fetchAvatar();
@@ -273,8 +272,8 @@ const Sidebar = () => {
 
         {/* Nav links */}
         <div style={{ flex: 1, padding: "0 12px", overflowY: "auto" }}>
-          {config.sections.map((section) => (
-            <div key={section.label} style={{ marginBottom: 24 }}>
+          {(config?.sections || []).filter(section => section && section.links && Array.isArray(section.links)).map((section) => (
+            <div key={section.label || Math.random()} style={{ marginBottom: 24 }}>
               <div style={{
                 fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
                 color: "rgba(100,116,139,0.7)", textTransform: "uppercase",
@@ -284,7 +283,7 @@ const Sidebar = () => {
                 <span>{section.icon}</span> {section.label}
               </div>
 
-              {section.links.map((link) => {
+              {(section.links || []).map((link) => {
                 const active = isActive(link.to);
                 return (
                   <Link

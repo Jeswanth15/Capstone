@@ -64,8 +64,8 @@ const StudentTimetable = () => {
                      <tr key={dayKey}>
                         <td style={{ padding:16, fontWeight:800, background:"var(--surface-2)", color:"var(--text-secondary)", borderBottom:"1px solid var(--border-subtle)", fontSize:12 }}>{dayKey}</td>
                         {[1,2,3,4,5,6,7].map(period => {
-                          const slot = timetable.find(t=>t.dayOfWeek.toUpperCase().startsWith(dayKey) && Number(t.periodNumber)===period);
-                          const subName = slot ? classSubjects.find(s=>s.subjectId===slot.subjectId)?.subjectName : null;
+                          const slot = timetable.find(t=>t.dayOfWeek?.toUpperCase().startsWith(dayKey) && Number(t.periodNumber)===period);
+                          const subName = slot ? classSubjects.find(s=>Number(s.subjectId)===Number(slot.subjectId))?.subjectName : null;
                           return (
                             <td key={period} style={{ padding:16, borderBottom: "1px solid var(--border-subtle)", background: slot ? "rgba(37,99,235,0.05)" : "transparent", textAlign:"center" }}>
                                {slot ? (

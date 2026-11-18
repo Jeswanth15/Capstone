@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import ErrorBoundary from "./ErrorBoundary";
 import { logout as authLogout, getDecodedToken, getUserIdFromToken } from "../utils/authHelper";
 import GamificationService from "../services/GamificationService";
 import AvatarService from "../services/AvatarService";
@@ -156,7 +157,9 @@ const Layout = ({ children }) => {
       background: "var(--bg-primary)",
       fontFamily: "var(--font-sans)",
     }}>
-      <Sidebar />
+      <ErrorBoundary>
+        <Sidebar />
+      </ErrorBoundary>
 
       {/* Main content area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>

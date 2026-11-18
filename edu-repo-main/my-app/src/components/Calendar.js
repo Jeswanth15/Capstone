@@ -50,8 +50,21 @@ const Calendar = () => {
     return days;
   };
 
+  const formatLocalDate = (date) => {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const getDayStatus = (date) => {
-    if(!date) return ""; const dt = date.toISOString().split("T")[0]; const e = calendar.find(c => c.date === dt); return e ? e.status : null;
+    if (!date) return "";
+    const dt = formatLocalDate(date);
+    const e = calendar.find(c => c.date === dt);
+    if (e) return e.status;
+    if (date.getDay() === 0) return "SUNDAY";
+    return null;
   };
 
   const updateDayStatus = async (dt, stat) => {
@@ -99,7 +112,7 @@ const Calendar = () => {
 
        <div style={{ display:"flex", justifyContent:"center", marginBottom:32 }}>
           <button onClick={() => setShowCalendar(p=>!p)} style={{ padding:"14px 40px", borderRadius:99, background:"linear-gradient(135deg, #1e40af, #3b82f6)", border:"none", color:"white", fontWeight:800, fontSize:15, cursor:"pointer", boxShadow:"0 8px 24px rgba(37,99,235,0.3)" }}>
-             {showCalendar ? "Collapse GUI" : "Open Geographic Viewer"}
+             {showCalendar ? "Collapse GUI" : "Open Calendar Viewer"}
           </button>
        </div>
 
@@ -116,7 +129,7 @@ const Calendar = () => {
                    {weekdays.map(w => <div key={w} style={{ textAlign:"center", fontSize:11, fontWeight:800, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"1px", paddingBottom:12 }}>{w}</div>)}
                    {days.map((date, idx) => {
                       const stat = getDayStatus(date);
-                      const dtStr = date?.toISOString().split("T")[0];
+                      const dtStr = formatLocalDate(date);
                       return (
                          <div key={idx} onClick={()=>date && setEditingDate(dtStr)} style={{ aspectRatio:"1/1", borderRadius:16, border:date?"1px solid var(--border-medium)":"none", background:getColor(stat), display:"flex", flexDirection:"column", padding:12, position:"relative", cursor:date?"pointer":"default", transition:"transform 0.2s" }} onMouseEnter={e=>{if(date)e.currentTarget.style.transform="scale(1.03)"}} onMouseLeave={e=>{if(date)e.currentTarget.style.transform="scale(1)"}}>
                             {date && <span style={{ fontSize:15, fontWeight:800, color:getTextColor(stat) }}>{date.getDate()}</span>}

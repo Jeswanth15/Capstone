@@ -11,5 +11,5 @@ numpy
 joblib
 sqlalchemy
 mysql-connector-python
-
- 
+scikit-learn
+xgboost

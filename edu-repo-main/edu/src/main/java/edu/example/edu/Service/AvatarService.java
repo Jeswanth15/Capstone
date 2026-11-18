@@ -118,8 +118,14 @@ public class AvatarService {
     // GET CURRENT USER AVATAR CONFIGURATION
     // ──────────────────────────────────────────────
     public UserAvatarConfigDTO getCurrentAvatar(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        if (userId == null) {
+            return getDefaultAvatarDTO("User");
+        }
+
+        User user = userRepository.findById(userId).orElse(null);
+        String seedName = (user != null && user.getName() != null && !user.getName().trim().isEmpty())
+                ? user.getName()
+                : String.valueOf(userId);
 
         Optional<UserAvatar> avatarOpt = userAvatarRepository.findByUserId(userId);
 
@@ -138,10 +144,14 @@ public class AvatarService {
             userAvatar.setClothes("blazerAndShirt");
             userAvatar.setFrame("blue");
             userAvatar.setBackground("ffffff");
-            userAvatar.setSeed(user.getName() != null ? user.getName() : String.valueOf(userId));
+            userAvatar.setSeed(seedName);
             userAvatar.setCreatedAt(LocalDateTime.now());
             userAvatar.setUpdatedAt(LocalDateTime.now());
-            userAvatar = userAvatarRepository.save(userAvatar);
+            try {
+                userAvatar = userAvatarRepository.save(userAvatar);
+            } catch (Exception e) {
+                // Ignore save failure if FK or DB issue occurs
+            }
         }
 
         UserAvatarConfigDTO dto = new UserAvatarConfigDTO();
@@ -153,7 +163,21 @@ public class AvatarService {
         dto.setClothes(userAvatar.getClothes() != null ? userAvatar.getClothes() : "blazerAndShirt");
         dto.setFrame(userAvatar.getFrame() != null ? userAvatar.getFrame() : "blue");
         dto.setBackground(userAvatar.getBackground() != null ? userAvatar.getBackground() : "ffffff");
-        dto.setSeed(userAvatar.getSeed() != null ? userAvatar.getSeed() : user.getName());
+        dto.setSeed(userAvatar.getSeed() != null ? userAvatar.getSeed() : seedName);
+        return dto;
+    }
+
+    private UserAvatarConfigDTO getDefaultAvatarDTO(String seed) {
+        UserAvatarConfigDTO dto = new UserAvatarConfigDTO();
+        dto.setHair("shortFlat");
+        dto.setEyes("happy");
+        dto.setEyebrows("default");
+        dto.setMouth("smile");
+        dto.setGlasses("none");
+        dto.setClothes("blazerAndShirt");
+        dto.setFrame("blue");
+        dto.setBackground("ffffff");
+        dto.setSeed(seed != null ? seed : "User");
         return dto;
     }
 
@@ -161,10 +185,8 @@ public class AvatarService {
     // GET ALL COSMETIC ITEMS GROUPED / ANNOTATED
     // ──────────────────────────────────────────────
     public Map<String, List<AvatarItemDTO>> getAllItemsGrouped(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
-
-        int userLevel = user.getCurrentLevel() != null ? user.getCurrentLevel() : 1;
+        User user = userRepository.findById(userId).orElse(null);
+        int userLevel = (user != null && user.getCurrentLevel() != null) ? user.getCurrentLevel() : 1;
         UserAvatarConfigDTO currentConfig = getCurrentAvatar(userId);
 
         Set<Long> unlockedIds = userUnlockedItemRepository.findByUserId(userId)
@@ -236,8 +258,8 @@ public class AvatarService {
     // ──────────────────────────────────────────────
     @Transactional
     public UserAvatarConfigDTO saveAvatarConfig(Long userId, UserAvatarConfigDTO configDTO) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        User user = userRepository.findById(userId).orElse(null);
+        String seedName = (user != null && user.getName() != null) ? user.getName() : String.valueOf(userId);
 
         Optional<UserAvatar> avatarOpt = userAvatarRepository.findByUserId(userId);
         UserAvatar userAvatar = avatarOpt.orElseGet(() -> {
@@ -255,7 +277,7 @@ public class AvatarService {
         if (configDTO.getClothes() != null) userAvatar.setClothes(configDTO.getClothes());
         if (configDTO.getFrame() != null) userAvatar.setFrame(configDTO.getFrame());
         if (configDTO.getBackground() != null) userAvatar.setBackground(configDTO.getBackground());
-        userAvatar.setSeed(user.getName() != null ? user.getName() : String.valueOf(userId));
+        userAvatar.setSeed(seedName);
         userAvatar.setUpdatedAt(LocalDateTime.now());
 
         userAvatarRepository.save(userAvatar);

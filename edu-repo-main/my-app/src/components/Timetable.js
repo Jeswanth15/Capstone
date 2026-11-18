@@ -31,7 +31,7 @@ const Timetable = () => {
     if (!selectedClass) return;
     const load = async () => {
       const g = {};
-      const thisClassTT = timetables.filter(t => t.classroomId === selectedClass.classId).map(t => ({ ...t, dayOfWeek: t.dayOfWeek.substring(0,3).toUpperCase(), periodNumber: Number(t.periodNumber) }));
+      const thisClassTT = timetables.filter(t => t.classroomId === selectedClass.classId).map(t => ({ ...t, dayOfWeek: t.dayOfWeek?.substring(0,3).toUpperCase() || "", periodNumber: Number(t.periodNumber) }));
       const subs = classSubjects.filter(cs => cs.classroomId === selectedClass.classId).map(cs => ({ subjectId: cs.subjectId, name: cs.subjectName }));
 
       daysOfWeek.forEach(d => {

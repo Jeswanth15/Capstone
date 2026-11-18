@@ -97,6 +97,7 @@ public class QuestionGenerationService {
                         "Explain the concept discussed in this sentence: \"" + sentence + "\"",
                         Collections.emptyList(),
                         "",
+                        "Concept explanation question based on syllabus context",
                         "SHORT_ANSWER",
                         "EASY"));
             }
@@ -106,7 +107,8 @@ public class QuestionGenerationService {
                 questions.add(new Question(
                         "True or False: " + sentence,
                         List.of("True", "False"),
-                        "True", // Assumption: Input content is factually true
+                        "True",
+                        "Fact verification based on syllabus sentence",
                         "TRUE_FALSE",
                         "EASY"));
             }

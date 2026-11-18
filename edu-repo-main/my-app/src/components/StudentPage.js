@@ -298,10 +298,10 @@ const StudentPage = () => {
                         {[1,2,3,4,5,6,7].map(p=>(
                           <tr key={p}>
                             <td style={{ fontSize:12, fontWeight:800, color:"var(--primary-color)", padding:8 }}>P{p}</td>
-                            {["MON","TUE","WED","THU","FRI","SAT"].map(d=>{
-                               const slot = timetable.find(t=>t.dayOfWeek.toUpperCase().startsWith(d) && Number(t.periodNumber)===p);
-                               return <td key={d+p} style={{ background:"white", borderRadius:8, padding:8, textAlign:"center", fontSize:11, fontWeight:700, color:"var(--text-secondary)" }}>{slot ? (classSubjects.find(s=>s.subjectId===slot.subjectId)?.subjectName || "-") : "-"}</td>
-                            })}
+                             {["MON","TUE","WED","THU","FRI","SAT"].map(d=>{
+                                const slot = timetable.find(t=>t.dayOfWeek?.toUpperCase().startsWith(d) && Number(t.periodNumber)===p);
+                                return <td key={d+p} style={{ background:"white", borderRadius:8, padding:8, textAlign:"center", fontSize:11, fontWeight:700, color:"var(--text-secondary)" }}>{slot ? (classSubjects.find(s=>Number(s.subjectId)===Number(slot.subjectId))?.subjectName || "-") : "-"}</td>
+                             })}
                           </tr>
                         ))}
                       </tbody>

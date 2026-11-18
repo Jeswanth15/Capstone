@@ -43,6 +43,8 @@ public class SecurityConfig {
                                 "/api/schools/**",
                                 "/api/questions/**",
                                 "/api/practice/**",
+                                "/ws-transport/**",
+                                "/ws-transport",
                                 "/error")
                         .permitAll()
                         .anyRequest().authenticated())

@@ -10,4 +10,6 @@ public class QuestionGenerationRequest {
     private java.util.List<String> fileLinks;
     private String moduleName;
     private String classSubjectId;
+    private String teamSessionId;
+    private String seed;
 }

@@ -60,6 +60,8 @@ class QuestionRequest(BaseModel):
     moduleName: str
     classSubjectId: str
     difficulty: str = "MEDIUM"
+    teamSessionId: Optional[str] = None
+    seed: Optional[str] = None
 
 class StudyPlanRequest(BaseModel):
     userId: int
@@ -181,13 +183,19 @@ async def generate_questions(request: QuestionRequest):
     except Exception as dbe:
         print(f"Error querying subject name in python service: {dbe}")
 
+    session_seed_info = ""
+    if request.teamSessionId:
+        session_seed_info = f"\nTeam Session ID: {request.teamSessionId}"
+    if request.seed:
+        session_seed_info += f"\nGeneration Seed: {request.seed}"
+
     if not context:
         print(f"No ChromaDB context found for {request.moduleName}. Falling back to general generation for {subject_name}...")
         prompt = f"""
-        Generate 10 multiple-choice questions (MCQs) for the subject '{subject_name}' on the module/topic '{request.moduleName}'.
-        Difficulty: {request.difficulty}
+        Generate EXACTLY 10 multiple-choice questions (MCQs) for the subject '{subject_name}' on the module/topic '{request.moduleName}'.
+        Difficulty: {request.difficulty}{session_seed_info}
         
-        Output the response in STRICT JSON format:
+        Output the response in STRICT JSON format (Array of EXACTLY 10 items):
         [
           {{
             "questionText": "...",
@@ -196,18 +204,17 @@ async def generate_questions(request: QuestionRequest):
             "explanation": "...",
             "type": "MCQ",
             "difficulty": "{request.difficulty}"
-          }},
-          ...
+          }}
         ]
         """
     else:
         prompt = f"""
         Context: {context}
         
-        Generate 10 multiple-choice questions (MCQs) based ONLY on the context above.
-        Difficulty: {request.difficulty}
+        Generate EXACTLY 10 multiple-choice questions (MCQs) based ONLY on the context above.
+        Difficulty: {request.difficulty}{session_seed_info}
         
-        Output the response in STRICT JSON format:
+        Output the response in STRICT JSON format (Array of EXACTLY 10 items):
         [
           {{
             "questionText": "...",
@@ -216,57 +223,65 @@ async def generate_questions(request: QuestionRequest):
             "explanation": "...",
             "type": "MCQ",
             "difficulty": "{request.difficulty}"
-          }},
-          ...
+          }}
         ]
         """
 
+    full_prompt = prompt + "\n\nIMPORTANT: Output ONLY the JSON array containing EXACTLY 10 questions. Do not include markdown formatting like ```json."
+    
+    # Retry loop to guarantee exactly 10 questions
+    for attempt in range(1, 4):
+        try:
+            print(f"Generating questions (Attempt {attempt}) using model: {active_model_name}")
+            response = model.generate_content(
+                full_prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            text_resp = response.text.strip()
+            
+            if "```" in text_resp:
+                if "```json" in text_resp:
+                    text_resp = text_resp.split("```json")[1].split("```")[0].strip()
+                else:
+                    text_resp = text_resp.split("```")[1].split("```")[0].strip()
+            
+            parsed_json = json.loads(text_resp)
+            if isinstance(parsed_json, list) and len(parsed_json) == 10:
+                print(f"Success: Generated EXACTLY 10 questions for {request.moduleName} on attempt {attempt}")
+                return parsed_json
+            else:
+                count = len(parsed_json) if isinstance(parsed_json, list) else 0
+                print(f"Attempt {attempt}: AI returned {count} questions instead of 10. Retrying...")
+        except Exception as e:
+            print(f"Attempt {attempt} failed: {str(e)}")
+
+    # Fallback to secondary model if primary model attempts failed
     try:
-        # Prompt modified to handle non-JSON mode if needed
-        full_prompt = prompt + "\n\nIMPORTANT: Output ONLY the JSON array. Do not include markdown formatting like ```json."
-        
-        print(f"Generating questions using model: {active_model_name}")
-        response = model.generate_content(
+        fallback_name = 'models/gemini-flash-latest' if active_model_name != 'models/gemini-flash-latest' else 'models/gemini-pro-latest'
+        print(f"Attempting fallback to {fallback_name}...")
+        fallback_model = genai.GenerativeModel(fallback_name)
+        resp = fallback_model.generate_content(
             full_prompt,
             generation_config={"response_mime_type": "application/json"}
         )
-        text = response.text.strip()
-        
-        # Clean up any potential markdown if the model ignores the instruction
-        if "```" in text:
-            if "```json" in text:
-                text = text.split("```json")[1].split("```")[0].strip()
+        text_fallback = resp.text.strip()
+        if "```" in text_fallback:
+            if "```json" in text_fallback:
+                text_fallback = text_fallback.split("```json")[1].split("```")[0].strip()
             else:
-                text = text.split("```")[1].split("```")[0].strip()
-        
-        # Basic validation and parsing to ensure it's valid JSON for Java
-        try:
-            parsed_json = json.loads(text)
-            print(f"Success: Generated {len(parsed_json)} questions for {request.moduleName}")
-            return parsed_json
-        except json.JSONDecodeError:
-            print(f"ERROR: AI returned invalid JSON: {text[:200]}...")
-            raise Exception("AI did not return valid JSON format.")
-    except Exception as e:
-        print(f"ERROR during generation with {active_model_name}: {str(e)}")
-        try:
-            fallback_name = 'models/gemini-flash-latest' if active_model_name != 'models/gemini-flash-latest' else 'models/gemini-pro-latest'
-            print(f"Attempting fallback to {fallback_name}...")
-            fallback_model = genai.GenerativeModel(fallback_name)
-            resp = fallback_model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "application/json"}
-            )
-            text_fallback = resp.text.strip()
-            if "```" in text_fallback:
-                if "```json" in text_fallback:
-                    text_fallback = text_fallback.split("```json")[1].split("```")[0].strip()
-                else:
-                    text_fallback = text_fallback.split("```")[1].split("```")[0].strip()
-            return json.loads(text_fallback)
-        except Exception as fe:
-            print(f"Fallback also failed: {str(fe)}")
-            raise HTTPException(status_code=500, detail=f"AI Generation Error: {str(e)}")
+                text_fallback = text_fallback.split("```")[1].split("```")[0].strip()
+        parsed_fallback = json.loads(text_fallback)
+        if isinstance(parsed_fallback, list) and len(parsed_fallback) == 10:
+            return parsed_fallback
+        elif isinstance(parsed_fallback, list) and len(parsed_fallback) > 0:
+            # Trim or pad if needed as extreme fallback
+            if len(parsed_fallback) > 10:
+                return parsed_fallback[:10]
+            return parsed_fallback
+    except Exception as fe:
+        print(f"Fallback also failed: {str(fe)}")
+    
+    raise HTTPException(status_code=500, detail="AI failed to generate exactly 10 questions.")
 
 @app.get("/predict-performance/{student_id}")
 async def get_performance(student_id: int):

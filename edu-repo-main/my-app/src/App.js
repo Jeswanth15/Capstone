@@ -51,6 +51,15 @@ import OfflineBanner from "./components/OfflineBanner";
 import InstallPromptBar from "./components/InstallPromptBar";
 import Layout from "./components/Layout";
 
+import TeacherTeamChallengeList from "./components/TeacherTeamChallengeList";
+import TeacherTeamChallengeCreate from "./components/TeacherTeamChallengeCreate";
+import StudentTeamChallengeList from "./components/StudentTeamChallengeList";
+import StudentTeamChallengeLobby from "./components/StudentTeamChallengeLobby";
+import StudentTeamChallengeView from "./components/StudentTeamChallengeView";
+import TeamChallengeHub from "./components/TeamChallengeHub";
+import TeamChallengeResultView from "./components/TeamChallengeResultView";
+import GamificationProfileWidget from "./components/GamificationProfileWidget";
+
 function PrivateRoute({ children, roles }) {
   const decoded = getDecodedToken();
   if (!decoded) return <Navigate to="/login" />;
@@ -177,6 +186,33 @@ function App() {
         />
 
         <Route
+          path="/teacher/team-challenges"
+          element={
+            <PrivateRoute roles={["TEACHER", "SCHOOLADMIN", "ADMIN"]}>
+              <Layout><TeamChallengeHub /></Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/team-challenges/list"
+          element={
+            <PrivateRoute roles={["TEACHER", "SCHOOLADMIN", "ADMIN"]}>
+              <Layout><TeacherTeamChallengeList /></Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/team-challenges/create"
+          element={
+            <PrivateRoute roles={["TEACHER", "SCHOOLADMIN", "ADMIN"]}>
+              <Layout><TeacherTeamChallengeCreate /></Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
           path="/teacher/assignments/:assignmentId/submissions"
           element={
             <PrivateRoute roles={["TEACHER", "SCHOOLADMIN"]}>
@@ -191,6 +227,51 @@ function App() {
           element={
             <PrivateRoute roles={["STUDENT"]}>
               <Layout><StudentPage /></Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/student/team-challenges"
+          element={
+            <PrivateRoute roles={["STUDENT"]}>
+              <Layout><TeamChallengeHub /></Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/student/team-challenges/list"
+          element={
+            <PrivateRoute roles={["STUDENT"]}>
+              <Layout><StudentTeamChallengeList /></Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/student/team-challenges/:id/lobby"
+          element={
+            <PrivateRoute roles={["STUDENT"]}>
+              <Layout><StudentTeamChallengeLobby /></Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/student/team-challenges/:id/play"
+          element={
+            <PrivateRoute roles={["STUDENT"]}>
+              <Layout><StudentTeamChallengeView /></Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/student/team-challenges/:id/results"
+          element={
+            <PrivateRoute roles={["STUDENT"]}>
+              <Layout><TeamChallengeResultView /></Layout>
             </PrivateRoute>
           }
         />
@@ -497,7 +578,7 @@ function App() {
           path="/student/gamification"
           element={
             <PrivateRoute roles={["STUDENT"]}>
-              <Layout><GamificationDashboard /></Layout>
+              <Layout><GamificationProfileWidget /></Layout>
             </PrivateRoute>
           }
         />
