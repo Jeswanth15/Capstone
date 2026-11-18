@@ -1,0 +1,60 @@
+# Environments
+.env
+.env.*
+!.env.example
+
+# Java / Spring Boot
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+hs_err_pid*
+replay_pid*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+venv_new/
+*.joblib
+
+# Node
+node_modules/
+
+# IDE / Editor / OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea
+*.iml
+
+# ChromaDB generated database
+**/python_service/chroma_db/
+
+# Python virtual environments
+.venv/
+env/
+
+# Python testing/cache
+.pytest_cache/
+.mypy_cache/
+
+# Frontend build files
+my-app/build/
+my-app/dist/
+my-app/coverage/
